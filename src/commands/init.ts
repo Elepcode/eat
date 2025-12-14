@@ -33,9 +33,7 @@ export async function initCommand() {
 }
 
 function generateConfigFile(config: any): string {
-  return `import { defineConfig } from '@eatjs/cli';
-
-export default defineConfig({
+  return `export default {
   name: 'my-project',
   
   workflows: {
@@ -86,6 +84,6 @@ export default defineConfig({
       bunFlags: ['--minify']
     }
   }
-});
+};
 `;
 }
