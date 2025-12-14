@@ -2,10 +2,11 @@ import { writeFileSync } from 'fs';
 import { join } from 'path';
 import { getDefaultConfig } from '../config/loader';
 import pc from 'picocolors';
-import ora from 'ora';
+import { theme, Progress } from '../utils/theme';
 
 export async function initCommand() {
-  const spinner = ora('Initializing Eat...').start();
+  const progress = new Progress('Initializing Eat...');
+  progress.start();
 
   try {
     const cwd = process.cwd();
@@ -17,16 +18,18 @@ export async function initCommand() {
 
     writeFileSync(configPath, configContent, 'utf-8');
 
-    spinner.succeed('Created eat.config.ts');
+    progress.succeed('Created eat.config.ts');
 
-    console.log(pc.green('\n✅ Eat initialized successfully!\n'));
-    console.log(pc.cyan('Next steps:\n'));
-    console.log(`  1. Review ${pc.yellow('eat.config.ts')}`);
-    console.log(`  2. Run ${pc.yellow('eat dev')} to start development`);
-    console.log(`  3. Run ${pc.yellow('eat info dev')} to see what will execute\n`);
+    console.log(theme.footer('Eat initialized successfully'));
+    console.log(theme.cream('Next steps:'));
+    console.log();
+    console.log(`  1. Review ${theme.cream('eat.config.ts')}`);
+    console.log(`  2. Run ${theme.cream('eat dev')} to start development`);
+    console.log(`  3. Run ${theme.cream('eat info dev')} to see what will execute`);
+    console.log();
 
   } catch (error: any) {
-    spinner.fail('Failed to initialize Eat');
+    progress.fail('Failed to initialize Eat');
     console.error(pc.red('Error:'), error.message);
     process.exit(1);
   }

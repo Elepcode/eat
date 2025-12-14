@@ -1,7 +1,9 @@
 import pc from 'picocolors';
+import { theme } from '../utils/theme';
 
 export async function doctorCommand() {
-  console.log(pc.cyan('\n🏥 Running Eat Doctor...\n'));
+  console.log(`\n${theme.cream('┌─')} Running Eat Doctor...`);
+  console.log(theme.cream('│'));
 
   const checks = [
     { name: 'Bun installation', fn: checkBun },
@@ -15,13 +17,13 @@ export async function doctorCommand() {
     try {
       const result = await check.fn();
       if (result.success) {
-        console.log(pc.green('✓'), check.name, pc.dim(result.message || ''));
+        console.log(theme.success(`${check.name} ${pc.dim(result.message || '')}`));
       } else {
-        console.log(pc.red('✗'), check.name, pc.dim(result.message || ''));
+        console.log(theme.error(`${check.name} ${pc.dim(result.message || '')}`));
         allPassed = false;
       }
     } catch (error: any) {
-      console.log(pc.red('✗'), check.name, pc.dim(error.message));
+      console.log(theme.error(`${check.name} ${pc.dim(error.message)}`));
       allPassed = false;
     }
   }
@@ -29,9 +31,9 @@ export async function doctorCommand() {
   console.log();
 
   if (allPassed) {
-    console.log(pc.green('✅ All checks passed!\n'));
+    console.log(theme.footer('All checks passed'));
   } else {
-    console.log(pc.yellow('⚠️  Some checks failed. Please review above.\n'));
+    console.log(theme.footer(pc.yellow('Some checks failed. Please review above')));
   }
 }
 

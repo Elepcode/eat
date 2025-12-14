@@ -1,7 +1,7 @@
 import type { WorkflowDefinition, WorkflowStep } from '../config/types';
 import { spawn } from 'bun';
 import pc from 'picocolors';
-import ora from 'ora';
+import { theme, Progress } from '../utils/theme';
 
 export class WorkflowExecutor {
   constructor(
@@ -13,7 +13,7 @@ export class WorkflowExecutor {
   async execute(): Promise<void> {
     const steps = this.normalizeSteps(this.definition);
 
-    console.log(pc.cyan(`\n🥟 Eating workflow: ${pc.bold(this.workflowName)}\n`));
+    console.log(theme.workflow(this.workflowName));
 
     for (const step of steps) {
       if (step.parallel) {
@@ -24,30 +24,27 @@ export class WorkflowExecutor {
       }
     }
 
-    console.log(pc.green(`\n✅ Workflow ${pc.bold(this.workflowName)} completed successfully!\n`));
+    console.log(theme.footer(`Workflow ${pc.bold(this.workflowName)} completed successfully`));
   }
 
   private async executeStep(step: WorkflowStep): Promise<void> {
-    const spinner = ora({
-      text: `Running: ${step.name}`,
-      color: 'cyan'
-    }).start();
+    const progress = new Progress(`Running: ${step.name}`);
+    progress.start();
 
     try {
       if (step.workflow) {
         // Execute nested workflow
-        spinner.text = `Running nested workflow: ${step.workflow}`;
-        // This would recursively execute another workflow
-        spinner.succeed(`Completed: ${step.name}`);
+        progress.update(`Running nested workflow: ${step.workflow}`);
+        progress.succeed(`Completed: ${step.name}`);
         return;
       }
 
       if (step.command) {
         await this.runCommand(step.command, step);
-        spinner.succeed(`Completed: ${step.name}`);
+        progress.succeed(`Completed: ${step.name}`);
       }
     } catch (error: any) {
-      spinner.fail(`Failed: ${step.name}`);
+      progress.fail(`Failed: ${step.name}`);
       throw new WorkflowError(
         `Step "${step.name}" failed: ${error.message}`,
         step.name,
@@ -101,23 +98,25 @@ export class WorkflowExecutor {
   async explain(): Promise<void> {
     const steps = this.normalizeSteps(this.definition);
 
-    console.log(pc.cyan(`\n📋 Workflow: ${pc.bold(this.workflowName)}\n`));
-    console.log(pc.dim('Execution plan:\n'));
+    console.log(`\n${theme.cream('┌─')} Workflow: ${pc.bold(this.workflowName)}`);
+    console.log(theme.cream('│'));
+    console.log(pc.dim('Execution plan:'));
+    console.log();
 
     steps.forEach((step, index) => {
-      const prefix = index === steps.length - 1 ? '└─' : '├─';
-      console.log(`${prefix} ${pc.yellow(step.name)}`);
+      const isLast = index === steps.length - 1;
+      console.log(theme.tree.branch(theme.cream(step.name), isLast));
 
       if (step.command) {
-        console.log(`   ${pc.dim('→')} ${pc.gray(step.command)}`);
+        console.log(theme.tree.indent(step.command));
       }
 
       if (step.workflow) {
-        console.log(`   ${pc.dim('→')} ${pc.gray(`workflow: ${step.workflow}`)}`);
+        console.log(theme.tree.indent(`workflow: ${step.workflow}`));
       }
 
       if (step.parallel) {
-        console.log(`   ${pc.dim('→')} ${pc.blue('(parallel)')}`);
+        console.log(theme.tree.indent(pc.cyan('(parallel)')));
       }
 
       console.log();
